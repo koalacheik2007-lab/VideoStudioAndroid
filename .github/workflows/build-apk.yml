@@ -17,10 +17,27 @@ jobs:
       - name: Recuperer le depot
         uses: actions/checkout@v4
 
-      - name: Decompresser le projet
+      
+      - name: Decompresser et corriger FFmpegKit
         run: |
           unzip -o VideoStudioAndroid_PROJET_COMPLET.zip -d extracted
           cp -a extracted/VideoStudioAndroid_LIVRABLE/. .
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("app/build.gradle.kts")
+          s = p.read_text()
+
+          old = 'implementation("com.arthenica:ffmpeg-kit-full:6.0-2.LTS")'
+          new = 'implementation("dev.ffmpegkit-maintained:ffmpeg-kit-full-gpl:8.1.9")'
+
+          if old not in s:
+              raise SystemExit("Ancienne dependance FFmpegKit introuvable")
+
+          p.write_text(s.replace(old, new, 1))
+          print("Dependance FFmpegKit corrigee")
+          PY
 
       - name: Installer Java 17
         uses: actions/setup-java@v4
